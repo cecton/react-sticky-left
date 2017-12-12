@@ -39,7 +39,8 @@ class StickyLeft extends React.Component {
             const left = offsetLeft - window.pageXOffset + containerWidth - clientWidth
             contentStyle += `left: calc(${left}px - ${style.right});`
           } else {
-            console.error("sticky object has no left or right style property")
+            const left = offsetLeft - window.pageXOffset
+            contentStyle += `left: ${left}px;`
           }
           if (style.top !== "auto") {
             const top = offsetTop - window.pageYOffset
@@ -48,12 +49,13 @@ class StickyLeft extends React.Component {
             const top = offsetTop - window.pageYOffset + containerHeight - clientHeight
             contentStyle += `top: calc(${top}px - ${style.bottom});`
           } else {
-            console.error("sticky object has no top or bottom style property")
+            const top = offsetTop - window.pageYOffset
+            contentStyle += `top: ${top}px;`
           }
           content.setAttribute("style", contentStyle)
           anchor.setAttribute("style", `
-            margin-right: ${clientWidth}px;
-            margin-bottom: ${clientHeight}px;
+            min-width: ${clientWidth}px;
+            min-height: ${clientHeight}px;
           `)
         })
     }, 0)
@@ -90,6 +92,21 @@ const FrozenColumnRight = ({ style }) => (
   <div id="right" style={{ ...frozenColumnStyleRight, ...style }} />
 )
 
+const frozenFooterStyle = {
+  height: "80px",
+  width: "540px",
+  background: "linear-gradient(to top, red, transparent)",
+  flexShrink: 0,
+  // NOTE: what we are trying to emulate:
+  //position: "sticky",
+  left: 20,
+  bottom: 20,
+}
+
+const FrozenFooter = ({ style }) => (
+  <div id="right" style={{ ...frozenFooterStyle, ...style }} />
+)
+
 const contentStyle = {
   height: "600px",
   width: "1000px",
@@ -98,13 +115,12 @@ const contentStyle = {
 }
 
 const Content = () => (
-  <div id="content" style={contentStyle}/>
+  <div id="content" style={contentStyle} />
 )
 
 const appStyle = {
   width: "600px",
   height: "300px",
-  display: "flex",
   overflow: "auto",
   margin: "40px",
   backgroundColor: "green",
@@ -113,30 +129,56 @@ const appStyle = {
 class App extends React.Component {
   render() {
     return (
-      <div style={{ width: 2000, height: 4000 }}>
+      <div style={{ width: 2000, height: 4000, display: "flex" }}>
         <div style={{ display: "inline-block"}}>
-        <div className="App" style={appStyle} ref="container">
-          <StickyLeft container={this.findContainer}>
-            <FrozenColumn />
-          </StickyLeft>
-          <Content />
-          <StickyLeft container={this.findContainer}>
-            <FrozenColumnRight />
-          </StickyLeft>
-        </div>
+          <div className="App" style={appStyle} ref="container">
+            <div style={{ display: "flex", width: "1400px" }}>
+              <StickyLeft container={this.findContainer}>
+                <FrozenColumn />
+              </StickyLeft>
+              <Content />
+              <StickyLeft container={this.findContainer}>
+                <FrozenColumnRight />
+              </StickyLeft>
+            </div>
+            <StickyLeft container={this.findContainer}>
+              <FrozenFooter />
+            </StickyLeft>
+          </div>
         </div>
         <div style={{ display: "inline-block"}}>
-        <div className="App" style={appStyle}>
-          <FrozenColumn style={{ position: "sticky" }} />
-          <Content />
-          <FrozenColumnRight style={{ position: "sticky" }} />
+          <div className="App" style={appStyle}>
+            <div style={{ display: "flex", width: "1400px" }}>
+              <FrozenColumn style={{ position: "sticky" }} />
+              <Content />
+              <FrozenColumnRight style={{ position: "sticky" }} />
+            </div>
+            <FrozenFooter style={{ position: "sticky" }} />
+          </div>
         </div>
+        <div style={{ display: "inline-block"}}>
+          <div className="App" style={appStyle} ref="container2">
+            <div style={{ display: "flex", width: "1400px" }}>
+              <StickyLeft container={this.findContainer2}>
+                <FrozenColumn style={{ position: "sticky" }} />
+              </StickyLeft>
+              <Content />
+              <StickyLeft container={this.findContainer2}>
+                <FrozenColumnRight style={{ position: "sticky" }} />
+              </StickyLeft>
+            </div>
+            <StickyLeft container={this.findContainer2}>
+              <FrozenFooter style={{ position: "sticky" }} />
+            </StickyLeft>
+          </div>
         </div>
       </div>
     )
   }
 
   findContainer = () => this.refs.container
+
+  findContainer2 = () => this.refs.container2
 }
 
 export default App;
