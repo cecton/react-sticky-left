@@ -30,10 +30,7 @@ class StickyLeft extends React.Component {
             position: fixed;
             overflow: hidden;
             box-sizing: border-box;
-            width: ${clientWidth}px;
             max-width: ${element.clientWidth}px;
-            height: ${clientHeight}px;
-            max-height: ${element.clientHeight}px;
           `
           let wrapperStyle = ""
           if (style.left !== "auto") {
@@ -49,14 +46,23 @@ class StickyLeft extends React.Component {
           }
           if (style.top !== "auto") {
             const top = element.offsetTop - window.pageYOffset
-            contentStyle += `top: calc(${top}px + ${style.top});`
+            contentStyle += `top: calc(${top}px + ${style.top}); max-height: calc(${element.clientHeight}px - ${style.top})`
           } else if (style.bottom !== "auto") {
             const top = element.offsetTop - window.pageYOffset + element.clientHeight - clientHeight
-            contentStyle += `top: calc(${top}px - ${style.bottom});`
+            contentStyle += `top: calc(${top}px - ${style.bottom}); max-height: calc(${element.clientHeight}px - ${style.bottom})`
           } else {
-            const top = anchor.offsetTop - window.pageYOffset
-            contentStyle += `top: ${top}px;`
-            wrapperStyle += `margin-top: -${element.scrollTop}px;`
+            const rect = anchor.getBoundingClientRect()
+            const realTop = anchor.offsetTop - window.pageYOffset - element.scrollTop
+            if (realTop < element.offsetTop) {
+              const top = element.offsetTop - window.pageYOffset
+              const maxHeight = element.clientHeight - window.pageYOffset
+              contentStyle += `top: ${top}px; max-height: ${maxHeight > 0 ? maxHeight : 0}px;`
+              wrapperStyle += `margin-top: -${element.scrollTop}px;`
+            } else {
+              const top = anchor.offsetTop - element.scrollTop - window.pageYOffset
+              const maxHeight = element.offsetTop + element.clientHeight - top - window.pageYOffset
+              contentStyle += `top: ${top}px; max-height: ${maxHeight > 0 ? maxHeight : 0}px;`
+            }
           }
           content.setAttribute("style", contentStyle)
           wrapper.setAttribute("style", wrapperStyle)
@@ -69,8 +75,8 @@ class StickyLeft extends React.Component {
   }
 }
 
-const frozenColumnStyle = {
-  height: "150px",
+const frozenTopLeftStyle = {
+  height: "100px",
   width: "200px",
   background: "linear-gradient(to right, yellow, transparent)",
   flexShrink: 0,
@@ -78,6 +84,20 @@ const frozenColumnStyle = {
   //position: "sticky",
   left: 20,
   top: 20,
+}
+
+const FrozenTopLeft = ({ style }) => (
+  <div id="left" style={{ ...frozenTopLeftStyle, ...style }} />
+)
+
+const frozenColumnStyle = {
+  height: "100px",
+  width: "200px",
+  background: "linear-gradient(to top right, blue, transparent)",
+  flexShrink: 0,
+  // NOTE: what we are trying to emulate:
+  //position: "sticky",
+  left: 20,
 }
 
 const FrozenColumn = ({ style }) => (
@@ -139,7 +159,7 @@ class App extends React.Component {
           <div className="App" style={appStyle} ref="container">
             <div style={{ display: "flex", width: "1400px" }}>
               <StickyLeft container={this.findContainer}>
-                <FrozenColumn />
+                <FrozenTopLeft/>
               </StickyLeft>
               <Content />
               <StickyLeft container={this.findContainer}>
@@ -149,23 +169,27 @@ class App extends React.Component {
             <StickyLeft container={this.findContainer}>
               <FrozenFooter />
             </StickyLeft>
+            <StickyLeft container={this.findContainer}>
+              <FrozenColumn />
+            </StickyLeft>
           </div>
         </div>
         <div style={{ display: "inline-block"}}>
           <div className="App" style={appStyle}>
             <div style={{ display: "flex", width: "1400px" }}>
-              <FrozenColumn style={{ position: "sticky" }} />
+              <FrozenTopLeft style={{ position: "sticky" }} />
               <Content />
               <FrozenColumnRight style={{ position: "sticky" }} />
             </div>
             <FrozenFooter style={{ position: "sticky" }} />
+            <FrozenColumn style={{ position: "sticky" }} />
           </div>
         </div>
         <div style={{ display: "inline-block"}}>
           <div className="App" style={appStyle} ref="container2">
             <div style={{ display: "flex", width: "1400px" }}>
               <StickyLeft container={this.findContainer2}>
-                <FrozenColumn style={{ position: "sticky" }} />
+                <FrozenTopLeft style={{ position: "sticky" }} />
               </StickyLeft>
               <Content />
               <StickyLeft container={this.findContainer2}>
@@ -174,6 +198,9 @@ class App extends React.Component {
             </div>
             <StickyLeft container={this.findContainer2}>
               <FrozenFooter style={{ position: "sticky" }} />
+            </StickyLeft>
+            <StickyLeft container={this.findContainer2}>
+              <FrozenColumn style={{ position: "sticky" }} />
             </StickyLeft>
           </div>
         </div>
