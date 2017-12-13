@@ -31,9 +31,9 @@ class StickyLeft extends React.Component {
             overflow: hidden;
             box-sizing: border-box;
             width: ${clientWidth}px;
-            max-width: ${clientWidth}px;
+            max-width: ${element.clientWidth}px;
             height: ${clientHeight}px;
-            max-height: ${clientHeight}px;
+            max-height: ${element.clientHeight}px;
           `
           let wrapperStyle = ""
           if (style.left !== "auto") {
@@ -100,7 +100,7 @@ const FrozenColumnRight = ({ style }) => (
 
 const frozenFooterStyle = {
   height: "80px",
-  width: "540px",
+  width: "700px",
   background: "linear-gradient(to top right, red, transparent)",
   flexShrink: 0,
   // NOTE: what we are trying to emulate:
