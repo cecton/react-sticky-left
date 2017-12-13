@@ -6,7 +6,9 @@ class StickyLeft extends React.Component {
     const { children } = this.props
     return [
       (<div key="anchor" ref="anchor" className="anchor"/>),
-      (<div key="content" ref="content" className="content">{children}</div>),
+      (<div key="content" ref="content" className="content">
+        <div key="wrapper" ref="wrapper" className="wrapper">{children}</div>
+      </div>),
     ]
   }
 
@@ -14,7 +16,7 @@ class StickyLeft extends React.Component {
     const { container } = this.props
     setTimeout(() => {
       const element = container()
-      const { anchor, content } = this.refs
+      const { anchor, content, wrapper } = this.refs
       console.log(element)
       Rx.Observable.merge(
         Rx.Observable.fromEvent(element, "scroll"),
@@ -22,37 +24,42 @@ class StickyLeft extends React.Component {
         Rx.Observable.interval(0).take(1))
         .debounce(() => Rx.Observable.interval(0, Rx.Scheduler.animationFrame))
         .subscribe(() => {
-          const { offsetLeft, offsetTop } = element
-          const containerWidth = element.clientWidth
-          const containerHeight = element.clientHeight
-          const { clientWidth, clientHeight } = content.firstChild
-          const style = window.getComputedStyle(content.firstChild)
+          const { clientWidth, clientHeight } = wrapper.firstChild
+          const style = window.getComputedStyle(wrapper.firstChild)
           let contentStyle = `
-              position: fixed;
-              width: ${clientWidth}px;
-              height: ${clientHeight}px;
+            position: fixed;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: ${clientWidth}px;
+            max-width: ${clientWidth}px;
+            height: ${clientHeight}px;
+            max-height: ${clientHeight}px;
           `
+          let wrapperStyle = ""
           if (style.left !== "auto") {
-            const left = offsetLeft - window.pageXOffset
+            const left = element.offsetLeft - window.pageXOffset
             contentStyle += `left: calc(${left}px + ${style.left});`
           } else if (style.right !== "auto") {
-            const left = offsetLeft - window.pageXOffset + containerWidth - clientWidth
+            const left = element.offsetLeft - window.pageXOffset + element.clientWidth - clientWidth
             contentStyle += `left: calc(${left}px - ${style.right});`
           } else {
-            const left = offsetLeft - window.pageXOffset
+            const left = anchor.offsetLeft - window.pageXOffset
             contentStyle += `left: ${left}px;`
+            wrapperStyle += `margin-left: -${element.scrollLeft}px;`
           }
           if (style.top !== "auto") {
-            const top = offsetTop - window.pageYOffset
+            const top = element.offsetTop - window.pageYOffset
             contentStyle += `top: calc(${top}px + ${style.top});`
           } else if (style.bottom !== "auto") {
-            const top = offsetTop - window.pageYOffset + containerHeight - clientHeight
+            const top = element.offsetTop - window.pageYOffset + element.clientHeight - clientHeight
             contentStyle += `top: calc(${top}px - ${style.bottom});`
           } else {
-            const top = offsetTop - window.pageYOffset
+            const top = anchor.offsetTop - window.pageYOffset
             contentStyle += `top: ${top}px;`
+            wrapperStyle += `margin-top: -${element.scrollTop}px;`
           }
           content.setAttribute("style", contentStyle)
+          wrapper.setAttribute("style", wrapperStyle)
           anchor.setAttribute("style", `
             min-width: ${clientWidth}px;
             min-height: ${clientHeight}px;
@@ -85,7 +92,6 @@ const frozenColumnStyleRight = {
   // NOTE: what we are trying to emulate:
   //position: "sticky",
   right: 20,
-  top: 20,
 }
 
 const FrozenColumnRight = ({ style }) => (
@@ -95,11 +101,10 @@ const FrozenColumnRight = ({ style }) => (
 const frozenFooterStyle = {
   height: "80px",
   width: "540px",
-  background: "linear-gradient(to top, red, transparent)",
+  background: "linear-gradient(to top right, red, transparent)",
   flexShrink: 0,
   // NOTE: what we are trying to emulate:
   //position: "sticky",
-  left: 20,
   bottom: 20,
 }
 
